@@ -106,14 +106,14 @@ public class ConfigurationSolver {
 		 
 		int t = 1;
 		double T = schedule(t);
-		while (T > 0.0001) {  // or some other small threshold
+		while (T > 0.001) {  // while true takes time to test it. 
 		    int[] candidate = randomNeighboor(configuration);
 		    double E = env.calcScore(candidate) - env.calcScore(configuration);
 		    
 		    if (E > 0) {
 		        configuration = candidate.clone();
 		        if (env.calcScore(configuration) > env.calcScore(bestConfiguration)) {
-		            bestConfiguration = configuration.clone();
+		            return bestConfiguration = configuration.clone();
 		        }
 		    } else {
 		        double prob= probability(E, T);
@@ -137,31 +137,27 @@ public class ConfigurationSolver {
 
 	private int[] randomNeighboor(int[] state) {
 		
-		// Clone the current state to create a new candidate state
 	    int[] neighbor = state.clone();
 
-	    // Select two random distinct positions in the array
-	    int pos1 = random.nextInt(neighbor.length);
-	    int pos2;
-	    do {
-	        pos2 = random.nextInt(neighbor.length);
-	    } while (pos1 == pos2);  // Ensure the two positions are distinct
-
-	    // Swap the tasks assigned to the two randomly selected positions (workers)
-	    int temp = neighbor[pos1];
-	    neighbor[pos1] = neighbor[pos2];
-	    neighbor[pos2] = temp;
+	    int job1 = random.nextInt(neighbor.length);
+	    int job2 = random.nextInt(neighbor.length);
+	    while (job1 == job2) {
+	    	job2 = random.nextInt(neighbor.length); 
+	    }
+	    
+	    // Simple swap operation for two jobs.
+	    int temp = neighbor[job1];
+	    neighbor[job1] = neighbor[job2];
+	    neighbor[job2] = temp;
 
 	    return neighbor;  // Return the candidate state;
 	}
 
 	private double schedule(int t) {
-		// TODO Auto-generated method stub
-		double initialTemp = 10000;
+		double initialTemp = 1000;
 		double decreaseRate = 0.99;
 		
-		
-		
+		// follow first slide for schedule which is not linear decrease time. 
 		return initialTemp * Math.pow(decreaseRate, t);
 	}
 
