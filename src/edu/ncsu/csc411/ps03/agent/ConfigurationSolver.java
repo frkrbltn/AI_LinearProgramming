@@ -19,6 +19,7 @@ public class ConfigurationSolver {
 	private Environment env;
 	private int[] configuration;
 	private int[] bestConfiguration;
+	private Random random;
 	
 	/** Initializes a Configuration Solver for a specific environment. */
 	public ConfigurationSolver (Environment env) { 
@@ -34,6 +35,8 @@ public class ConfigurationSolver {
 		// array, it will constantly change as this.configuration changes.
 		// Cloning the array resolves this issue.
 		this.bestConfiguration = this.configuration.clone();
+		this.random = new Random();
+		
 	}
 	
 	/**
@@ -61,21 +64,107 @@ public class ConfigurationSolver {
 
 	/**
 		Replace this docstring comment with an explanation of your implementation.
+		We will implement a simulated annealing algorithm. We will start with a random configuration
+		but we wont randomly change the configuration. Instead we will change the configuration
+		by swapping two values. We will then calculate the score of the new configuration and compare
+		it to the score of the old configuration. If the new configuration has a higher score, we will
+		keep it. If the new configuration has a lower score, we will keep it with a probability of
+		e^((newScore - oldScore)/temperature). We will then decrease the temperature by a factor of
+		0.99. We will repeat this process until the temperature is less than 0.0001. We will then
+		return the best configuration we found.
 	 */
 	public int[] updateSearch () {
-		// Random Search (aka -40% penalty if you use this)
-		ArrayList<Integer> intList = new ArrayList<Integer>();
-		for(int val : this.configuration)
-			intList.add(val);
-		Collections.shuffle(intList);
-		for(int i = 0; i < this.configuration.length; i++)
-			this.configuration[i] = intList.get(i);
-		System.out.println(Arrays.toString(this.configuration) + " = " + env.calcScore(this.configuration));
-		if (env.calcScore(this.configuration) > env.calcScore(bestConfiguration))
-			this.bestConfiguration = this.configuration.clone();
-		return this.configuration;
+		// // Random Search (aka -40% penalty if you use this)
+
+		 // Hold the integers from the current configuration array.
+//		 ArrayList<Integer> intList = new ArrayList<Integer>();
+//		 for(int val : this.configuration)
+//		 	intList.add(val);	// each value represents a task assigned the worker.
+//		 Collections.shuffle(intList); // then suffle the values.
+//		 for(int i = 0; i < this.configuration.length; i++)
+//		 	this.configuration[i] = intList.get(i);
+//		 System.out.println(Arrays.toString(this.configuration) + " = " + env.calcScore(this.configuration));
+//		 if (env.calcScore(this.configuration) > env.calcScore(bestConfiguration))
+//		 	this.bestConfiguration = this.configuration.clone();
+
+		// Write the simulated anneling algorithm in pseduo code
+//		 func simulated_annealing (state):
+//		 	for t = 1 to infinity do
+//		 		T = schedule(t)
+//		 		if T = 0 then return state
+//		 		candidate = a randomly selected successor of current
+//		 		ΔE = candidate.score - state.score
+//		 		if ΔE > 0 then state = candidate
+//		 		else 
+//		 	      probability = e^(ΔE/T)
+//		 		  if random < probability
+//		 		  	state = candidate
+		
+//		 ArrayList<Integer> intList = new ArrayList<Integer>();
+//		 for(int val : this.configuration)
+//		 	intList.add(val);	// each value represents a task assigned the worker.
+		 
+		int t = 1;
+		double T = schedule(t);
+		while (T > 0.0001) {  // or some other small threshold
+		    int[] candidate = randomNeighboor(configuration);
+		    double E = env.calcScore(candidate) - env.calcScore(configuration);
+		    
+		    if (E > 0) {
+		        configuration = candidate.clone();
+		        if (env.calcScore(configuration) > env.calcScore(bestConfiguration)) {
+		            bestConfiguration = configuration.clone();
+		        }
+		    } else {
+		        double prob= probability(E, T);
+		        if (random.nextDouble() < prob) {
+		            configuration = candidate.clone();
+		        }
+		    }
+		    
+		    t++;
+		    T = schedule(t);
+		}
+		return getBestConfiguration();
+
 	}
 	
+
+	private double probability(double E, double T) {
+		
+		return Math.exp(E/T);
+	}
+
+	private int[] randomNeighboor(int[] state) {
+		
+		// Clone the current state to create a new candidate state
+	    int[] neighbor = state.clone();
+
+	    // Select two random distinct positions in the array
+	    int pos1 = random.nextInt(neighbor.length);
+	    int pos2;
+	    do {
+	        pos2 = random.nextInt(neighbor.length);
+	    } while (pos1 == pos2);  // Ensure the two positions are distinct
+
+	    // Swap the tasks assigned to the two randomly selected positions (workers)
+	    int temp = neighbor[pos1];
+	    neighbor[pos1] = neighbor[pos2];
+	    neighbor[pos2] = temp;
+
+	    return neighbor;  // Return the candidate state;
+	}
+
+	private double schedule(int t) {
+		// TODO Auto-generated method stub
+		double initialTemp = 10000;
+		double decreaseRate = 0.99;
+		
+		
+		
+		return initialTemp * Math.pow(decreaseRate, t);
+	}
+
 	/**
 	 * In addition to updateSearch, you should also track you BEST OBSERVED CONFIGURATION.
 	 * While your search may move to worse configurations (since that's what the algorithm
